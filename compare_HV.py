@@ -35,9 +35,9 @@ def update(frame):
 ani = animation.FuncAnimation(fig, update, frames=len(iterations)+1, interval=400, blit=True)
 
 # GIF로 저장
-gif_path = "hypervolume_comparison.gif"
-ani.save(gif_path, writer='pillow', fps=5)
-plt.close(fig)  # Streamlit에 중복 출력 방지
+#gif_path = "hypervolume_comparison.gif"
+#ani.save(gif_path, writer='pillow', fps=5)
+#plt.close(fig)  # Streamlit에 중복 출력 방지
 
 # ✅ Streamlit에서 GIF 표시
 st.subheader("하이퍼볼륨 비교 (GA+BO vs BO only)")
