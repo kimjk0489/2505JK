@@ -8,8 +8,8 @@ import os
 st.set_page_config(page_title="Hypervolume tracking")
 
 # CSV 파일 로딩
-hv_df_blue = pd.read_csv("C:\Dev\PythonProject\Data\hv_tracking_ga_bo.csv")   # GA+BO 결과
-hv_df_red = pd.read_csv("C:\Dev\PythonProject\Data\hv_tracking_bo.csv")       # BO만 사용한 결과
+hv_df_blue = pd.read_csv("hv_tracking_ga_bo.csv")   # GA+BO 결과
+hv_df_red = pd.read_csv("hv_tracking_bo.csv")       # BO만 사용한 결과
 
 iterations = hv_df_blue["iteration"].values
 hv_blue = hv_df_blue["hv"].values
