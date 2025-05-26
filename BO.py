@@ -136,32 +136,32 @@ pareto_df.insert(0, "실험 번호", pareto_indices+1)
 st.subheader("Pareto Front를 구성하는 실험 데이터")
 st.dataframe(pareto_df.round(3), hide_index=True)
 
-st.subheader("\U0001F4CA 5-Fold Cross Validation (RMSE)")
-kf = KFold(n_splits=5, shuffle=True, random_state=42)
-rmse_dict = {"Yield_stress": [], "Viscosity": [], "Graphite_wt%": []}
-X_tensor = torch.tensor(X_scaled, dtype=torch.double)
-Y_tensor = torch.tensor(Y_raw_extended, dtype=torch.double)
+#st.subheader("\U0001F4CA 5-Fold Cross Validation (RMSE)")
+#kf = KFold(n_splits=5, shuffle=True, random_state=42)
+#rmse_dict = {"Yield_stress": [], "Viscosity": [], "Graphite_wt%": []}
+#X_tensor = torch.tensor(X_scaled, dtype=torch.double)
+#Y_tensor = torch.tensor(Y_raw_extended, dtype=torch.double)
 
-for train_idx, test_idx in kf.split(X_tensor):
-    X_train, Y_train = X_tensor[train_idx], Y_tensor[train_idx]
-    X_test, Y_test = X_tensor[test_idx], Y_tensor[test_idx]
-    Y_train_mod = Y_train.clone()
-    Y_train_mod[:, 1] = -Y_train_mod[:, 1]
-    model_cv = SingleTaskGP(X_train, Y_train_mod)
-    mll_cv = ExactMarginalLogLikelihood(model_cv.likelihood, model_cv)
-    fit_gpytorch_mll(mll_cv)
-    preds = model_cv.posterior(X_test).mean.detach().numpy()
-    preds[:, 1] = -preds[:, 1]
-    for i, target in enumerate(["Yield_stress", "Viscosity", "Graphite_wt%"]):
-        rmse = np.sqrt(mean_squared_error(Y_test[:, i], preds[:, i]))
-        rmse_dict[target].append(rmse)
+#for train_idx, test_idx in kf.split(X_tensor):
+    #X_train, Y_train = X_tensor[train_idx], Y_tensor[train_idx]
+    #X_test, Y_test = X_tensor[test_idx], Y_tensor[test_idx]
+    #Y_train_mod = Y_train.clone()
+    #Y_train_mod[:, 1] = -Y_train_mod[:, 1]
+    #model_cv = SingleTaskGP(X_train, Y_train_mod)
+    #mll_cv = ExactMarginalLogLikelihood(model_cv.likelihood, model_cv)
+    #fit_gpytorch_mll(mll_cv)
+    #preds = model_cv.posterior(X_test).mean.detach().numpy()
+    #preds[:, 1] = -preds[:, 1]
+    #for i, target in enumerate(["Yield_stress", "Viscosity", "Graphite_wt%"]):
+        #rmse = np.sqrt(mean_squared_error(Y_test[:, i], preds[:, i]))
+        #rmse_dict[target].append(rmse)
 
-rmse_df = pd.DataFrame({
-    "Target": list(rmse_dict.keys()),
-    "RMSE Mean": [np.mean(v) for v in rmse_dict.values()],
-    "RMSE Std": [np.std(v) for v in rmse_dict.values()]
-})
-st.dataframe(rmse_df)
+#rmse_df = pd.DataFrame({
+    #"Target": list(rmse_dict.keys()),
+    #"RMSE Mean": [np.mean(v) for v in rmse_dict.values()],
+    #"RMSE Std": [np.std(v) for v in rmse_dict.values()]
+#})
+#st.dataframe(rmse_df)
 
 hv_log_path = "C:\Dev\PythonProject\Data\hv_tracking_bo.csv"
 hv_list = []
