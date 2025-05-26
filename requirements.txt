@@ -8,3 +8,4 @@ pandas
 numpy
 pyDOE
 shap
+pillow
