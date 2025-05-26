@@ -36,7 +36,7 @@ ani = animation.FuncAnimation(fig, update, frames=len(iterations)+1, interval=40
 
 # GIF로 저장
 gif_path = "hypervolume_comparison.gif"
-#ani.save(gif_path, writer='pillow', fps=5)
+ani.save(gif_path, writer='pillow', fps=5)
 plt.close(fig)  # Streamlit에 중복 출력 방지
 
 # ✅ Streamlit에서 GIF 표시
