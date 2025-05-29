@@ -26,7 +26,7 @@ CSV_PATH = "GA_BO_Slurry_data.csv"
 df = pd.read_csv(CSV_PATH)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
-y_cols = ["Yield stress", "n", "K", "Viscosity"]
+y_cols = ["Yield_stress", "n", "K", "Viscosity"]
 
 # JK
 # url = "https://raw.githubusercontent.com/Yerimdw/2504_slurry/refs/heads/main/LHS_slurry_data_st.csv"
