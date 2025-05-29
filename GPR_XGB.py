@@ -12,7 +12,7 @@ st.set_page_config(page_title="XGBoost vs GPR 예측 비교")
 st.title("새로운 조성값 예측 비교 (XGBoost vs GPR)")
 
 # 데이터 로딩
-data_path = "C:/Dev/PythonProject/Data/BO_slurry_data.csv"
+data_path = "BO_slurry_data.csv"
 df = pd.read_csv(data_path)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
