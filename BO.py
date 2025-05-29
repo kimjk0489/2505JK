@@ -22,7 +22,7 @@ CSV_PATH = "BO_Slurry_data.csv"
 df = pd.read_csv(CSV_PATH)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
-y_cols = ["Yield stress", "Viscosity"]
+y_cols = ["Yield_stress", "Viscosity"]
 
 X_raw = df[x_cols].values
 Y_raw = df[y_cols].values
