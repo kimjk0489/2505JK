@@ -9,3 +9,4 @@ numpy
 pyDOE
 shap
 pillow
+xgboost
