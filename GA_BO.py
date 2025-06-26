@@ -19,10 +19,10 @@ from botorch.utils.multi_objective.pareto import is_non_dominated
 from botorch.optim import optimize_acqf
 from scipy.spatial import ConvexHull
 
-st.set_page_config(page_title="GA + Bayasian optimization")
-st.title("Slurry 조성 최적화: qEHVI 기반 3목적 Bayesian Optimization")
+st.set_page_config(page_title="GA + Bayesian Optimization")
+st.title("Slurry 조성 최적화 : GA + Bayesian Optimization")
 
-CSV_PATH = "GA_BO_Slurry_data.csv"
+CSV_PATH = "C:\Dev\PythonProject\Data\GA_BO_Slurry_data.csv"
 df = pd.read_csv(CSV_PATH)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
@@ -232,20 +232,43 @@ st.dataframe(table_composition, hide_index=True)
 
 X_predict = x_scaler.transform(candidate_wt.reshape(1, -1)) # 정규화
 X_tensor = torch.tensor(X_predict, dtype=torch.double) # numpy 배열에서 PyTorch tensor로 변경
-posterior = bo_model.posterior(X_tensor) # model에 input 넣어 예측값 구함
+posterior = bo_model.posterior(X_tensor)  # 예측 분포 획득
 pred_mean = posterior.mean.detach().cpu().numpy()[0]
-# 예측값
+pred_std = posterior.variance.sqrt().detach().cpu().numpy()[0]
+
+# 평균값
 yield_pred = pred_mean[0]
-visc_pred = -pred_mean[1] # 최소화를 위해 부호 반전했으니까 다시 - 붙임
+visc_pred = -pred_mean[1]  # 최소화를 위해 부호 반전
 graphite_pred = pred_mean[2]
 
-# 예측값 Table 출력
-st.subheader("추천 조성의 유변학적 물성")
-table_predicted = pd.DataFrame({
-    "Yield_stress": [f"{yield_pred:.2f} Pa"],
-    "Viscosity": [f"{visc_pred:.3f} Pa.s"],
+# 표준편차
+yield_std = pred_std[0]
+visc_std = pred_std[1]
+
+# 95% 신뢰구간 계산 (1.96 * std)
+yield_ci_lower = yield_pred - 1.96 * yield_std
+yield_ci_upper = yield_pred + 1.96 * yield_std
+visc_ci_lower = visc_pred - 1.96 * visc_std
+visc_ci_upper = visc_pred + 1.96 * visc_std
+
+# 예측값 Table (깔끔한 표 형식으로 출력)
+st.subheader("추천 조성의 유변학적 물성 예측 (95% 신뢰구간)")
+
+# 값 계산
+yield_ci = (yield_pred - 1.96 * yield_std, yield_pred + 1.96 * yield_std)
+visc_ci = (visc_pred - 1.96 * visc_std, visc_pred + 1.96 * visc_std)
+
+# 테이블 생성
+results_df = pd.DataFrame({
+    "Property": ["Yield Stress (Pa)", "Viscosity (Pa·s)"],
+    "Predicted": [f"{yield_pred:.2f}", f"{visc_pred:.3f}"],
+    "Std Dev": [f"±{yield_std:.2f}", f"±{visc_std:.3f}"],
+    "95% CI": [f"[{yield_ci[0]:.2f}, {yield_ci[1]:.2f}]",
+               f"[{visc_ci[0]:.3f}, {visc_ci[1]:.3f}]"]
 })
-st.dataframe(table_predicted, hide_index=True)
+st.dataframe(results_df, hide_index=True)
+
+
 
 # Pareto front 출력
 pareto_mask = is_non_dominated(train_y_hv) # is_non_dominated 함수: 비지배 해 인덱스 추출
@@ -259,9 +282,9 @@ ax = fig.add_subplot(111, projection='3d')
 ax.scatter(train_y_vis_plot[:, 1], train_y_vis_plot[:, 0], train_y_vis_plot[:, 2],
            color='gray', alpha=0.7, label='Experimental Data', s=40, depthshade=False)
 ax.scatter(pareto_points[:, 1], pareto_points[:, 0], pareto_points[:, 2],
-           color='red', s=40, marker='o', edgecolors='black', depthshade=False, label='Pareto Front')
+           color='blue', s=40, marker='o', edgecolors='black', depthshade=False, label='Pareto Front')
 ax.scatter(visc_pred, yield_pred, graphite_pred,
-           color='blue', edgecolors='black', s=40, marker='^', label='Candidate')
+           color='yellow', edgecolors='black', s=200, marker='^', label='Candidate')
 
 if len(pareto_points) >= 4: # 3개 이하는 convex hull 생성 불가
     try:
@@ -269,7 +292,7 @@ if len(pareto_points) >= 4: # 3개 이하는 convex hull 생성 불가
         for simplex in hull.simplices:
             tri = pareto_points[simplex]
             ax.plot_trisurf(tri[:, 1], tri[:, 0], tri[:, 2],
-                            color='pink', alpha=0.4, edgecolor='gray', linewidth=1.2)
+                            color='lightblue', alpha=0.4, edgecolor='gray', linewidth=1.2)
     except Exception as e:
         st.warning(f"Convex Hull 실패: {e}")
 
@@ -286,6 +309,46 @@ fig.subplots_adjust(left=0, right=5, top=1, bottom=0)
 st.subheader("Pareto front graph")
 st.pyplot(fig)
 
+st.subheader("2D 시각화: 각 조성 목표 간 관계")
+
+# 복원된 값
+yield_stress_vals = train_y_hv[:, 0].numpy()
+viscosity_vals = -train_y_hv[:, 1].numpy()  # 부호 복원
+graphite_vals = train_y_hv[:, 2].numpy()
+is_pareto = is_non_dominated(train_y_hv).numpy()
+
+# 시각화 함수
+def plot_2d(x, y, xlabel, ylabel, x_cand, y_cand, title):
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.scatter(x, y, c='gray', alpha=0.5, label='All Data')
+    ax.scatter(x[is_pareto], y[is_pareto], c='blue', label='Pareto Front', edgecolors='black')
+    ax.scatter(x_cand, y_cand, c='yellow', marker='^', edgecolors='black', s=100, label='Candidate')
+    ax.set_xlabel(xlabel, fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(title, fontsize=13)
+    ax.grid(True)
+    ax.legend()
+    st.pyplot(fig)
+
+# 1. Yield Stress vs Viscosity
+plot_2d(viscosity_vals, yield_stress_vals,
+        "Viscosity [Pa·s]", "Yield Stress [Pa]",
+        visc_pred, yield_pred,
+        "Yield Stress vs. Viscosity")
+
+# 2. Yield Stress vs Graphite
+plot_2d(graphite_vals, yield_stress_vals,
+        "Graphite wt%", "Yield Stress [Pa]",
+        graphite_pred, yield_pred,
+        "Yield Stress vs. Graphite")
+
+# 3. Viscosity vs Graphite
+plot_2d(graphite_vals, viscosity_vals,
+        "Graphite wt%", "Viscosity [Pa·s]",
+        graphite_pred, visc_pred,
+        "Viscosity vs. Graphite")
+
+
 # Pareto front에 해당하는 데이터 추출
 pareto_indices = np.where(pareto_mask.numpy())[0]
 pareto_X = X_raw[pareto_indices]                   # 조성 원본
@@ -295,11 +358,15 @@ pareto_Y = Y_raw_extended[pareto_indices]          # 물성 원본
 pareto_df = pd.DataFrame(pareto_X, columns=x_cols)
 pareto_df["Yield stress (Pa)"] = pareto_Y[:, 0]
 pareto_df["Viscosity (Pa.s)"] = pareto_Y[:, 1]
-pareto_df.insert(0, "실험 번호", pareto_indices+1)
+pareto_df.insert(0, "실험 번호", pareto_indices + 1)
+
+# 인덱스를 1부터 시작하는 Index 열로 표시
+pareto_df.index = np.arange(1, len(pareto_df) + 1)
+pareto_df.index.name = "Index"
 
 # Streamlit에서 표로 출력
 st.subheader("Pareto Front를 구성하는 실험 데이터")
-st.dataframe(pareto_df.round(3), hide_index=True)
+st.dataframe(pareto_df.round(3), hide_index=False)
 
 # st.subheader("5-Fold Cross Validation (RMSE)")
 # kf = KFold(n_splits=5, shuffle=True, random_state=42)
