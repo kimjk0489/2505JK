@@ -19,8 +19,9 @@ st.set_page_config(page_title="Bayesian Optimization")
 st.title("Slurry 조성 최적화 : Bayesian Optimization")
 
 #CSV_PATH = "C:\Dev\PythonProject\Data\BO_Slurry_data.csv"
+#df = pd.read_csv(CSV_PATH)
 CSV_URL = "https://github.com/kimjk0489/2505JK/blob/main/BO_Slurry_data.csv"
-df = pd.read_csv(CSV_PATH)
+df = pd.read_csv(CSV_URL)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
 y_cols = ["Yield_stress", "Viscosity"]
