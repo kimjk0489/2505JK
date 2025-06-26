@@ -22,8 +22,10 @@ from scipy.spatial import ConvexHull
 st.set_page_config(page_title="GA + Bayesian Optimization")
 st.title("Slurry 조성 최적화 : GA + Bayesian Optimization")
 
-CSV_PATH = "C:\Dev\PythonProject\Data\GA_BO_Slurry_data.csv"
-df = pd.read_csv(CSV_PATH)
+#CSV_PATH = "C:\Dev\PythonProject\Data\GA_BO_Slurry_data.csv"
+#df = pd.read_csv(CSV_PATH)
+CSV_URL = "https://raw.githubusercontent.com/kimjk0489/2505JK/main/GA_BO_Slurry_data.csv"
+df = pd.read_csv(CSV_URL)
 
 x_cols = ["Graphite", "Carbon_black", "CMC", "SBR", "Solvent"]
 y_cols = ["Yield_stress", "n", "K", "Viscosity"]
